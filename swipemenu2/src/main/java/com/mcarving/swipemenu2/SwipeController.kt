@@ -204,7 +204,7 @@ class SwipeController(
                 itemView.right - buttonWidthWithoutPadding * 15 / 19,
                 (itemView.bottom).toFloat()
         )
-        p.color = Color.parseColor("#D86C0B")
+        p.color = Color.BLUE
         c.drawRoundRect(rightButtonEdit, corners, corners, p)
         drawText("Edit", c, rightButtonEdit, p)
         drawIcon(R.drawable.ic_edit, c, rightButtonEdit)
@@ -218,7 +218,7 @@ class SwipeController(
         p.color = Color.RED
         c.drawRoundRect(rightButtonDelete, corners, corners, p)
         drawText("Remove", c, rightButtonDelete, p)
-        drawIcon(R.drawable.ic_remove, c, rightButtonDelete)
+        drawIcon(R.drawable.ic_delete, c, rightButtonDelete)
 
         buttonEditInstance = rightButtonEdit
         buttonDeleteInstance = rightButtonDelete
