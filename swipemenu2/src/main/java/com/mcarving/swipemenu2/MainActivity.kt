@@ -39,8 +39,8 @@ class MainActivity : AppCompatActivity() {
 
         recyclerView.adapter = playersDataAdapter
 
-        swipeController = SwipeController(object : SwipeControllerActions {
-            override fun onLeftClicked(position: Int) {
+        swipeController = SwipeController(applicationContext, object : SwipeControllerActions {
+            override fun onEditClicked(position: Int) {
                 Toast.makeText(
                         applicationContext,
                         "clicked on left button",
@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity() {
                 ).show()
             }
 
-            override fun onRightClicked(position: Int) {
+            override fun onDeleteClicked(position: Int) {
                 playersDataAdapter.players.removeAt(position)
                 playersDataAdapter.notifyItemRemoved(position)
                 playersDataAdapter.notifyItemRangeChanged(position, playersDataAdapter.itemCount)

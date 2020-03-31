@@ -1,11 +1,9 @@
 package com.mcarving.swipemenu2
 
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.RectF
+import android.content.Context
+import android.graphics.*
+import android.util.Log
 import android.view.MotionEvent
-import android.view.View
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.*
 import androidx.recyclerview.widget.RecyclerView
@@ -13,10 +11,14 @@ import androidx.recyclerview.widget.RecyclerView
 // https://codeburst.io/android-swipe-menu-with-recyclerview-8f28a235ff28
 // https://github.com/FanFataL/swipe-controller-demo
 
+//modified with drawButtons, two buttons on the right
+
 class SwipeController(
+        private val context : Context,
         private val buttonsActions : SwipeControllerActions
 ) : ItemTouchHelper.Callback() {
-    private var buttonInstance: RectF? = null
+    private var buttonEditInstance: RectF? = null
+    private var buttonDeleteInstance: RectF? = null
     private var swipeBack = false
     private var buttonShowedState = ButtonsState.GONE
     private val buttonWidth = 300F
@@ -27,7 +29,7 @@ class SwipeController(
             recyclerView: RecyclerView,
             viewHolder: RecyclerView.ViewHolder
     ): Int {
-        return makeMovementFlags(0, LEFT or RIGHT)
+        return makeMovementFlags(0, LEFT)
     }
 
     override fun onMove(
@@ -63,12 +65,16 @@ class SwipeController(
 
         if (actionState == ACTION_STATE_SWIPE) {
             when(buttonShowedState){
-                //ButtonsState.LEFT_VISIBLE -> newX = buttonWidth
-                ButtonsState.LEFT_VISIBLE -> newX = Math.max(dX, buttonWidth)
-                //ButtonsState.RIGHT_VISIBLE -> newX = -buttonWidth
-                ButtonsState.RIGHT_VISIBLE -> newX = Math.min(dX, -buttonWidth)
+                ButtonsState.RIGHT_VISIBLE -> newX = Math.min(dX, -buttonWidth*15/19*2)
 
-                else -> setTouchListener(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+                else -> setTouchListener(
+                        c,
+                        recyclerView,
+                        viewHolder,
+                        dX,
+                        dY,
+                        actionState,
+                        isCurrentlyActive)
             }
 
         }
@@ -76,8 +82,6 @@ class SwipeController(
         super.onChildDraw(c, recyclerView, viewHolder, newX, dY, actionState, isCurrentlyActive)
 
         currentItemViewHolder = viewHolder
-
-        //drawButtons(c, viewHolder)
     }
 
 
@@ -95,10 +99,8 @@ class SwipeController(
                     event.action == MotionEvent.ACTION_UP
 
             if(swipeBack){
-                if(dX < -buttonWidth) {
+                if(dX < -buttonWidth * 15 / 19) {
                     buttonShowedState = ButtonsState.RIGHT_VISIBLE
-                } else if(dX > buttonWidth){
-                    buttonShowedState = ButtonsState.LEFT_VISIBLE
                 }
 
                 if(buttonShowedState != ButtonsState.GONE) {
@@ -109,7 +111,6 @@ class SwipeController(
             }
             false
         }
-
     }
 
     private fun setTouchDownListener(
@@ -140,18 +141,14 @@ class SwipeController(
     ) {
         recyclerView.setOnTouchListener { v, event ->
             if(event.action == MotionEvent.ACTION_UP){
-                val temp = buttonInstance
-                if(temp != null && temp.contains(event.x, event.y)){
-                    when(buttonShowedState){
-                        ButtonsState.LEFT_VISIBLE -> {
-                            buttonsActions.onLeftClicked(viewHolder.adapterPosition)
-                        }
-                        ButtonsState.RIGHT_VISIBLE -> {
-                            buttonsActions.onRightClicked(viewHolder.adapterPosition)
-                        }
-                        else -> {
-                            // do nothing
-                        }
+                val editBtn = buttonEditInstance
+                val deleteBtn = buttonDeleteInstance
+                if(buttonShowedState == ButtonsState.RIGHT_VISIBLE){
+                    if(editBtn != null && editBtn.contains(event.x, event.y)){
+                        buttonsActions.onEditClicked(viewHolder.adapterPosition)
+                    }
+                    if(deleteBtn != null && deleteBtn.contains(event.x, event.y)){
+                        buttonsActions.onDeleteClicked(viewHolder.adapterPosition)
                     }
                 }
 
@@ -201,36 +198,44 @@ class SwipeController(
         val itemView = viewHolder.itemView
         val p = Paint()
 
-        val leftButton = RectF(
-                itemView.left.toFloat(),
+        val rightButtonEdit = RectF(
+                itemView.right - buttonWidthWithoutPadding * 15 / 19 * 2,
                 itemView.top.toFloat(),
-                (itemView.left + buttonWidthWithoutPadding),
+                itemView.right - buttonWidthWithoutPadding * 15 / 19,
                 (itemView.bottom).toFloat()
         )
-        p.color = Color.BLUE
-        c.drawRoundRect(leftButton, corners, corners, p)
-        drawText("Edit", c, leftButton, p)
+        p.color = Color.parseColor("#D86C0B")
+        c.drawRoundRect(rightButtonEdit, corners, corners, p)
+        drawText("Edit", c, rightButtonEdit, p)
+        drawIcon(R.drawable.ic_edit, c, rightButtonEdit)
 
-        val rightButton = RectF(
-                itemView.right - buttonWidthWithoutPadding,
+        val rightButtonDelete = RectF(
+                itemView.right - buttonWidthWithoutPadding * 15 / 19,
                 itemView.top.toFloat(),
                 itemView.right.toFloat(),
                 itemView.bottom.toFloat()
         )
         p.color = Color.RED
-        c.drawRoundRect(rightButton, corners, corners, p)
-        drawText("DELETE", c, rightButton, p)
+        c.drawRoundRect(rightButtonDelete, corners, corners, p)
+        drawText("Remove", c, rightButtonDelete, p)
+        drawIcon(R.drawable.ic_remove, c, rightButtonDelete)
 
-        buttonInstance = null
-        if(buttonShowedState == ButtonsState.LEFT_VISIBLE){
-            buttonInstance = leftButton
-        } else if(buttonShowedState == ButtonsState.RIGHT_VISIBLE){
-            buttonInstance = rightButton
-        }
+        buttonEditInstance = rightButtonEdit
+        buttonDeleteInstance = rightButtonDelete
+    }
+
+    private fun drawIcon(resId: Int, c: Canvas, rightButtonEdit: RectF) {
+        val d = context.resources.getDrawable(resId, null)
+        d.bounds=Rect(rightButtonEdit.centerX().toInt() - 30,
+                rightButtonEdit.centerY().toInt() - 50,
+                rightButtonEdit.centerX().toInt() + 30,
+                rightButtonEdit.centerY().toInt() + 10)
+
+        d.draw(c)
     }
 
     private fun drawText(text: String, c: Canvas, button: RectF, p: Paint) {
-        val textSize = 60F
+        val textSize = 40F
         p.color = Color.WHITE
         p.isAntiAlias = true
         p.textSize = textSize
@@ -238,7 +243,7 @@ class SwipeController(
         val textWidth = p.measureText(text)
         c.drawText(text,
                 button.centerX()-(textWidth/2),
-                button.centerY()+(textSize/2),
+                button.centerY()+textSize*3/2,
                 p
         )
     }
@@ -246,6 +251,5 @@ class SwipeController(
 
 enum class ButtonsState {
     GONE,
-    LEFT_VISIBLE,
     RIGHT_VISIBLE
 }

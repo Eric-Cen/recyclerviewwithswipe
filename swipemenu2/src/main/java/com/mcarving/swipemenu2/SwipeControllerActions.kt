@@ -1,6 +1,6 @@
 package com.mcarving.swipemenu2
 
 interface SwipeControllerActions {
-    fun onLeftClicked(position : Int)
-    fun onRightClicked(position : Int)
+    fun onEditClicked(position : Int)
+    fun onDeleteClicked(position : Int)
 }
