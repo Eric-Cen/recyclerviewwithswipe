@@ -5,6 +5,6 @@
 2) https://velmm.com/android-recyclerview-with-swipe-menu-example/
 
 ## Screenshot:
-![alt text](https://github.com/Eric-Cen/recyclerviewwithswipe/blob/master/Screen_swipemenu2.png)
+![alt text](https://github.com/Eric-Cen/recyclerviewwithswipe/blob/master/swipe_menu.gif)
 
 
